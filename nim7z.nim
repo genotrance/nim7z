@@ -103,11 +103,12 @@ iterator walk(svnz: SvnzFile): tuple[filename: string, isdir: int, contents: ptr
 
   checkError()
 
-proc `=destroy`(svnz: var SvnzFile) =
-  SzArEx_Free(addr svnz.db, addr allocImp)
-  allocImp.Free(addr allocImp, svnz.lookStream.buf)
+when defined(windows):
+  proc `=destroy`[SvnzFile](svnz: var SvnzFile) =
+    SzArEx_Free(addr svnz.db, addr allocImp)
+    allocImp.Free(addr allocImp, svnz.lookStream.buf)
 
-  discard File_Close(addr svnz.archiveStream.file)
+    discard File_Close(addr svnz.archiveStream.file)
 
 proc extract*(svnz: SvnzFile, directory: string, skipOuterDirs=false, tempDir: string = nil) =
   ## Extracts the files stored in the opened ``SvnzFile`` into the specified
