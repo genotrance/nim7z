@@ -9,7 +9,12 @@ extract(svnzf, "tempdir")
 
 assert fileExists("tempdir"/"nimcache"/"nim7z_test7z.c")
 
-removeDir("tempdir")
+while dirExists("tempdir"):
+  try:
+    removeDir("tempdir")
+    sleep(1000)
+  except:
+    discard
 
 extract(svnzf, "tempdir", true)
 

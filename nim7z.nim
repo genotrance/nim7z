@@ -110,7 +110,7 @@ proc `=destroy`(svnz: var SvnzFileObj) =
 
   discard File_Close(addr svnz.archiveStream.file)
 
-proc extract*(svnz: SvnzFile, directory: string, skipOuterDirs=false, tempDir: string = nil) =
+proc extract*(svnz: SvnzFile, directory: string, skipOuterDirs=false, tempDir: string = "") =
   ## Extracts the files stored in the opened ``SvnzFile`` into the specified
   ## ``directory``.
   ##
@@ -125,7 +125,7 @@ proc extract*(svnz: SvnzFile, directory: string, skipOuterDirs=false, tempDir: s
   # implement the ``skipOuterDirs`` feature and ensures that no files are
   # extracted into the specified directory if the extraction fails mid-way.
   var tempDir = tempDir
-  if tempDir.isNil:
+  if tempDir.len() == 0:
     tempDir = getTempDir() / "nim7z-" & svnz.filename.extractFilename()
   removeDir(tempDir)
   createDir(tempDir)
@@ -154,7 +154,7 @@ proc extract*(svnz: SvnzFile, directory: string, skipOuterDirs=false, tempDir: s
   copyDir(srcDir, directory)
   removeDir(tempDir)
 
-proc extract*(svnzf, directory: string, skipOuterDirs=false, tempDir: string = nil) =
+proc extract*(svnzf, directory: string, skipOuterDirs=false, tempDir: string = "") =
   ## Extracts the files stored in the file name specified, to the directory specified.
   let svnz = new7zFile(svnzf)
   extract(svnz, directory, skipOuterDirs, tempDir)
