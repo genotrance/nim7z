@@ -7,11 +7,7 @@ __Installation__
 Nim7z can be installed via [Nimble](https://github.com/nim-lang/nimble):
 
 ```
-> nimble install nimgen
-
-> git clone https://github.com/genotrance/nim7z
-> cd nim7z
-> nimble install
+> nimble install nim7z
 ```
 
 This will download, wrap and install nim7z in the standard Nimble package location, typically ~/.nimble. Once installed, it can be imported into any Nim program.

@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.1"
+version       = "0.1.2"
 author        = "genotrance"
 description   = "7z extraction for Nim"
 license       = "MIT"
@@ -18,6 +18,8 @@ if detectOs(Windows):
     cmd = "cmd /c "
 
 task setup, "Download and generate":
+    withDir "..":
+        exec cmd & "nimble install nimgen -y"
     exec cmd & "nimgen nim7z.cfg"
 
 before install:
