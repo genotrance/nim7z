@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.2"
+version       = "0.1.3"
 author        = "genotrance"
 description   = "7z extraction for Nim"
 license       = "MIT"
