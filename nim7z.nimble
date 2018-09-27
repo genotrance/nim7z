@@ -15,15 +15,13 @@ import distros
 
 var cmd = ""
 if detectOs(Windows):
-    cmd = "cmd /c "
+  cmd = "cmd /c "
 
 task setup, "Download and generate":
-    withDir "..":
-        exec cmd & "nimble install nimgen -y"
-    exec cmd & "nimgen nim7z.cfg"
+  exec cmd & "nimgen nim7z.cfg"
 
 before install:
-    setupTask()
+  setupTask()
 
 task test, "Test":
-    exec "nim c -r tests/test7z.nim"
+  exec "nim c -r tests/test7z.nim"

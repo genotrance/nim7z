@@ -7,6 +7,8 @@ __Installation__
 Nim7z can be installed via [Nimble](https://github.com/nim-lang/nimble):
 
 ```
+> nimble install nimgen
+
 > nimble install nim7z
 ```
 
