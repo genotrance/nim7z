@@ -26,5 +26,5 @@ task setup, "Checkout and generate":
 before install:
   setupTask()
 
-task test, "Test":
-  exec "nim c -r tests/test7z.nim"
+task test, "Run tests":
+  exec "nim c -r tests/t" & name & ".nim"
