@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.3"
+version       = "0.1.4"
 author        = "genotrance"
 description   = "7z extraction for Nim"
 license       = "MIT"
@@ -9,16 +9,19 @@ skipDirs = @["tests"]
 
 # Dependencies
 
-requires "nimgen >= 0.2.0"
+requires "nimgen >= 0.4.0"
 
-import distros
+var
+  name = "nim7z"
+  cmd = when defined(Windows): "cmd /c " else: ""
 
-var cmd = ""
-if detectOs(Windows):
-  cmd = "cmd /c "
+mkDir(name)
 
-task setup, "Download and generate":
-  exec cmd & "nimgen nim7z.cfg"
+task setup, "Checkout and generate":
+  if gorgeEx(cmd & "nimgen").exitCode != 0:
+    withDir(".."):
+      exec "nimble install nimgen -y"
+  exec cmd & "nimgen " & name & ".cfg"
 
 before install:
   setupTask()
