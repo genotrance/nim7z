@@ -22,12 +22,12 @@ var
   g_Alloc = ISzAlloc(Alloc: SzAlloc, Free: SzFree)
   allocImp = g_Alloc
   allocTempImp = g_Alloc
-  kInputBufSize = 1 shl 18
+  kInputBufSize = 1.csize_t shl 18
 
   res: SRes = SZ_OK
 
   temp: ptr UInt16
-  tempSize = 0
+  tempSize: csize_t = 0
 
 proc checkError() =
   if res != SZ_OK:
@@ -39,6 +39,12 @@ proc checkError() =
       raise newException(SvnzError, "CRC error")
     else:
       raise newException(SvnzError, "Value = " & $res)
+
+proc `=destroy`(svnz: var SvnzFileObj) =
+  SzArEx_Free(addr svnz.db, addr allocImp)
+  allocImp.Free(addr allocImp, svnz.lookStream.buf)
+
+  discard File_Close(addr svnz.archiveStream.file)
 
 proc new7zFile*(fname: string): SvnzFile =
   ## Opens a .7z file for reading.
@@ -69,28 +75,28 @@ proc loadDataStream(svnz: SvnzFile) =
 
   checkError()
 
-iterator walk(svnz: SvnzFile): tuple[filename: string, isdir: int, contents: ptr Byte, size: int] =
+iterator walk(svnz: SvnzFile): tuple[filename: string, isdir: int, contents: ptr Byte, size: csize_t] =
   var
     blockIndex = 0xFFFFFFFF.uint32
     outBuffer: ptr Byte = nil
-    outBufferSize = 0
+    outBufferSize: csize_t = 0
 
   for i in 0 ..< svnz.db.NumFiles:
     var
-      offset = 0
-      outSizeProcessed = 0
-      length = SzArEx_GetFileNameUtf16(addr svnz.db, i.csize, nil)
+      offset: csize_t = 0
+      outSizeProcessed: csize_t = 0
+      length = SzArEx_GetFileNameUtf16(addr svnz.db, i.csize_t, nil)
       isDir = SzArEx_IsDir(svnz.db, i.int)
 
     if length > tempSize:
       SzFree(nil, temp)
       tempSize = length
-      temp = cast[ptr UInt16](SzAlloc(nil, tempSize * sizeof(UInt16)))
+      temp = cast[ptr UInt16](SzAlloc(nil, tempSize * sizeof(UInt16).csize_t))
       if temp == nil:
         res = SZ_ERROR_MEM
         break
 
-    discard SzArEx_GetFileNameUtf16(addr svnz.db, i.csize, temp)
+    discard SzArEx_GetFileNameUtf16(addr svnz.db, i.csize_t, temp)
 
     if isDir == 0:
       res = SzArEx_Extract(addr svnz.db, addr svnz.lookStream.vt, i.UInt32, addr blockIndex,
@@ -100,15 +106,9 @@ iterator walk(svnz: SvnzFile): tuple[filename: string, isdir: int, contents: ptr
       if res != SZ_OK:
         break
 
-    yield ($cast[WideCString](temp), isDir, cast[ptr Byte](cast[int](outBuffer)+offset), outSizeProcessed)
+    yield ($cast[WideCString](temp), isDir, cast[ptr Byte](cast[csize_t](outBuffer)+offset), outSizeProcessed)
 
   checkError()
-
-proc `=destroy`(svnz: var SvnzFileObj) =
-  SzArEx_Free(addr svnz.db, addr allocImp)
-  allocImp.Free(addr allocImp, svnz.lookStream.buf)
-
-  discard File_Close(addr svnz.archiveStream.file)
 
 proc extract*(svnz: SvnzFile, directory: string, skipOuterDirs=false, tempDir: string = "") =
   ## Extracts the files stored in the opened ``SvnzFile`` into the specified
