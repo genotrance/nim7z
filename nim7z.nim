@@ -148,7 +148,9 @@ proc extract*(svnz: SvnzFile, directory: string, skipOuterDirs=false, tempDir: s
       var filePath: string
       if not skipOuterDirs:
         filePath = tempDir / file
-        createDir(filePath.splitPath.head)
+        let dirPath = filePath.splitPath.head
+        if not existsDir(dirPath):
+          createDir(dirPath)
       else:
         filePath = tempDir / file.extractFilename()
       let fp = filePath.open(fmWrite)
