@@ -15,6 +15,7 @@ type
     archiveStream: CFileInStream
     lookStream: CLookToRead2
     db: CSzArEx
+    disposed: bool
 
   SvnzError* = object of Exception
 
@@ -41,10 +42,20 @@ proc checkError() =
       raise newException(SvnzError, "Value = " & $res)
 
 proc `=destroy`(svnz: var SvnzFileObj) =
-  SzArEx_Free(addr svnz.db, addr allocImp)
-  allocImp.Free(addr allocImp, svnz.lookStream.buf)
+  if not svnz.disposed:
+    SzArEx_Free(addr svnz.db, addr allocImp)
+    allocImp.Free(addr allocImp, svnz.lookStream.buf)
+    discard File_Close(addr svnz.archiveStream.file)
 
-  discard File_Close(addr svnz.archiveStream.file)
+proc dispose(svnz: SvnzFile) =
+  if not svnz.disposed:
+    SzArEx_Free(addr svnz.db, addr allocImp)
+    allocImp.Free(addr allocImp, svnz.lookStream.buf)
+    discard File_Close(addr svnz.archiveStream.file)
+    svnz.disposed = true
+
+proc close*(svnz: SvnzFile) =
+  dispose(svnz)
 
 proc new7zFile*(fname: string): SvnzFile =
   ## Opens a .7z file for reading.
@@ -134,7 +145,13 @@ proc extract*(svnz: SvnzFile, directory: string, skipOuterDirs=false, tempDir: s
 
   for file, isDir, data, size in svnz.walk():
     if isDir == 0:
-      let fp = (tempDir / (if not skipOuterDirs: file else: file.extractFilename())).open(fmWrite)
+      var filePath: string
+      if not skipOuterDirs:
+        filePath = tempDir / file
+        createDir(filePath.splitPath.head)
+      else:
+        filePath = tempDir / file.extractFilename()
+      let fp = filePath.open(fmWrite)
       let arr = cast[ptr UncheckedArray[char]](data)
       for i in 0 ..< size:
         write(fp, arr[i])
